@@ -143,6 +143,35 @@ int NDEF_URI::setURI(const char *uri)
     return payload_length;
 }
 
+int NDEF_URI::storeURI(char *buf, size_t maxlen)
+{
+    int total_size = 0;
+
+    if (buf == NULL || maxlen < 1)
+        return -1;
+    if (maxlen < ndef_uri_prefixes_strlen[prefix])
+        return -1;
+
+    strcpy(buf, ndef_uri_prefixes[prefix]);
+    total_size = ndef_uri_prefixes_strlen[prefix];
+
+    if (maxlen < payload_length) {
+        strncat(buf, (char *)payload, maxlen-1);
+        total_size += maxlen-1;
+    } else {
+        strncat(buf, (char *)payload, payload_length);
+        total_size += payload_length;
+    }
+
+    return total_size;
+}
+
+int NDEF_URI::printURI(Print &p)
+{
+    p.write((const uint8_t *)ndef_uri_prefixes[prefix], ndef_uri_prefixes_strlen[prefix]);
+    p.write((const uint8_t *)payload, payload_length);
+}
+
 int NDEF_URI::printTo(Print &p)
 {
     uint32_t real_plen = payload_length + 1;
@@ -175,6 +204,9 @@ int NDEF_URI::printTo(Print &p)
     printedSize += 2;
     p.write((const uint8_t *)payload, payload_length);
     printedSize += payload_length;
+    /* NOTE: printedSize may be a smaller variable than payload_length
+     * but Arduino's Printable API demands printTo() return an int.
+     */
 
     return printedSize;
 }

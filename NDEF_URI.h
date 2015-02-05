@@ -42,6 +42,8 @@ class NDEF_URI : public NDEF {
         void setPayloadBuffer(uint8_t *buf, size_t maxlen) { payload = buf; payload_buf_maxlen = maxlen; };
         static uint8_t compressPrefix(const char *uri);
         static const char * decompressPrefix(const uint8_t pfx);
+        int storeURI(char *buf, size_t maxlen);
+        int printURI(Print &p);
 
         int printTo(Print &p);  // For outputting to a suitable NFC passive device
         int import(Stream &s);  // For reading from a suitable NFC passive device, or any form of stream

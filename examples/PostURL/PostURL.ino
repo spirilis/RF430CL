@@ -41,6 +41,9 @@ void setup() {
 
   Serial.println("Activating NFC transceiver-");
   nfc.enable();
+
+  Serial.println("Printing URL to Serial port-");
+  tiweb.printURI(Serial);
 }
 
 void loop() {
