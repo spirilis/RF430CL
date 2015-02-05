@@ -29,7 +29,7 @@ void setup() {
   NDEF_URI tiweb("http://www.ti.com");
 
   Serial.println("Writing URL object to NFC transceiver-");
-  int ndef_size = tiweb.printTo(nfc);
+  int ndef_size = tiweb.export(nfc);  // Export URI NDEF object to RF430's SRAM
 
   Serial.print("Configuring NDEF record size (");
     Serial.print(ndef_size);
@@ -41,9 +41,10 @@ void setup() {
 
   Serial.println("Activating NFC transceiver-");
   nfc.enable();
+  // NDEF URI object is now live and available over the air!
 
   Serial.println("Printing URL to Serial port-");
-  tiweb.printURI(Serial);
+  tiweb.printURI(Serial);  // Test the NDEF_URI printURI() feature
 }
 
 void loop() {

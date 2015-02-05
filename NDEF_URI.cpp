@@ -172,7 +172,7 @@ int NDEF_URI::printURI(Print &p)
     p.write((const uint8_t *)payload, payload_length);
 }
 
-int NDEF_URI::printTo(Print &p)
+int NDEF_URI::export(Print &p)
 {
     uint32_t real_plen = payload_length + 1;
     int printedSize = 0;
@@ -204,9 +204,7 @@ int NDEF_URI::printTo(Print &p)
     printedSize += 2;
     p.write((const uint8_t *)payload, payload_length);
     printedSize += payload_length;
-    /* NOTE: printedSize may be a smaller variable than payload_length
-     * but Arduino's Printable API demands printTo() return an int.
-     */
+    // NOTE: printedSize may be a smaller variable than payload_length
 
     return printedSize;
 }
