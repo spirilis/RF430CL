@@ -146,6 +146,7 @@ int NDEF_URI::setURI(const char *uri)
 int NDEF_URI::printTo(Print &p)
 {
     uint32_t real_plen = payload_length + 1;
+    int printedSize = 0;
 
     // Output valid NDEF binary format
     if (real_plen > 254) {
@@ -154,20 +155,28 @@ int NDEF_URI::printTo(Print &p)
         p.write(tnf | NDEF_FIELD_MB | NDEF_FIELD_ME | NDEF_FIELD_SR);
     }
     p.write(1);  // Length of TYPE field
+    printedSize = 2;
+
     if (real_plen > 254) {
         // PAYLOAD_LENGTH is a 32-bit Big-Endian unsigned integer
         p.write((uint8_t) (real_plen >> 24));
         p.write((uint8_t) ((real_plen >> 16) & 0xFF));
         p.write((uint8_t) ((real_plen >> 8) & 0xFF));
         p.write((uint8_t) (real_plen & 0xFF));
+        printedSize += 4;
     } else {
         // PAYLOAD_LENGTH is an 8-bit unsigned integer
         p.write(real_plen);
+        printedSize++;
     }
     p.write((uint8_t) type[0]);  // TYPE
     // PAYLOAD
     p.write(prefix);
+    printedSize += 2;
     p.write((const uint8_t *)payload, payload_length);
+    printedSize += payload_length;
+
+    return printedSize;
 }
 
 int NDEF_URI::import(Stream &s)

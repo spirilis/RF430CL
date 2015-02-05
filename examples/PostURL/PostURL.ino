@@ -10,7 +10,10 @@
 #include <NDEF.h>
 #include <NDEF_URI.h>
 
-RF430 nfc(8, 12);
+#define RF430CL330H_BOOSTERPACK_RESET_PIN  8
+#define RF430CL330H_BOOSTERPACK_IRQ_PIN    12
+
+RF430 nfc(RF430CL330H_BOOSTERPACK_RESET_PIN, RF430CL330H_BOOSTERPACK_IRQ_PIN);
 
 void setup() {
   Serial.begin(115200);
@@ -26,10 +29,12 @@ void setup() {
   NDEF_URI tiweb("http://www.ti.com");
 
   Serial.println("Writing URL object to NFC transceiver-");
-  nfc.setDataPointer(0);
-  tiweb.printTo(nfc);
-  Serial.print("Configuring NDEF record size ("); Serial.print(nfc.getDataPointer()); Serial.println(" bytes)");
-  nfc.setDataLength(nfc.getDataPointer());
+  int ndef_size = tiweb.printTo(nfc);
+
+  Serial.print("Configuring NDEF record size (");
+    Serial.print(ndef_size);
+    Serial.println(" bytes)");
+  nfc.setDataLength(ndef_size);
 
   //Serial.println("SRAM dump-");
   //DumpSRAM();
