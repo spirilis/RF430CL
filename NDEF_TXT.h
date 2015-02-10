@@ -1,4 +1,4 @@
-/* NDEF_URI - Handle URI NFC NDEF records
+/* NDEF_TXT - Handle Text NFC NDEF records
  *
  * Copyright (c) 2015 Eric Brundick <spirilis [at] linux dot com>
  *  Permission is hereby granted, free of charge, to any person 
@@ -22,31 +22,45 @@
  *  DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef NDEF_URI_H
-#define NDEF_URI_H
+#ifndef NDEF_TXT_H
+#define NDEF_TXT_H
 
 #include <NDEF.h>
 
-class NDEF_URI : public NDEF {
+#define NDEF_RTD_TEXT_STATUS_UTF16 0x80
+
+class NDEF_TXT : public NDEF {
     protected:
         // Inherited: tnf, type_length, id_length, payload_length, type, id, payload
-        uint8_t prefix;
         // payload is reused as the pointer to URI
         size_t payload_buf_maxlen;
+        boolean is_utf16;
+        char lang[8];
+        size_t lang_length;
 
     public:
-        NDEF_URI();
-        NDEF_URI(const char *uri);
+        NDEF_TXT();
+        NDEF_TXT(const char *lang_);
+        NDEF_TXT(const char *lang_, const char *text_);
 
-        int setURI(const char *uri);
+        int setText(const char *text);
+        int setText(const uint8_t *text) { return setText((const char *)text); };
+        char * getText() { return (char *)payload; };
+
+        int appendText(const char *text);
+        int appendText(const uint8_t *text) { return appendText((const char *)text); };
+
         void setPayloadBuffer(uint8_t *buf, size_t maxlen) { payload = buf; payload_buf_maxlen = maxlen; };
-        static uint8_t compressPrefix(const char *uri);
-        static const char * decompressPrefix(const uint8_t pfx);
-        int storeURI(char *buf, size_t maxlen);
-        int printURI(Print &p);
+
+        void setUTF16(boolean tf) { is_utf16 = tf; };
+        boolean isUTF16() { return is_utf16; };
+
+        void setLanguage(const char *lang_);
+        const char * getLanguage() { return (const char *)lang; };
+        boolean testLanguage(const char *l);  // Compare lang[] case-insensitively with a language specifier, possibly without subtype
 
         int sendTo(Print &p);   // For outputting to a suitable NFC passive device
         int import(Stream &s);  // For reading from a suitable NFC passive device, or any form of stream
 };
 
-#endif /* NDEF_URI_H */
+#endif /* NDEF_TXT_H */

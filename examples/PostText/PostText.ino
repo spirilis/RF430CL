@@ -1,14 +1,14 @@
-/* PostURL
- * Example NFC application which posts a single URL to the RF430CL330H
+/* PostText
+ * Example NFC application which posts a short sentence to the RF430CL330H
  * NFC Tag controller
  *
- * Written by Eric Brundick 2/4/2015
+ * Written by Eric Brundick 2/10/2015
  */
 
 #include <Wire.h>
 #include <RF430CL.h>
 #include <NDEF.h>
-#include <NDEF_URI.h>
+#include <NDEF_TXT.h>
 
 #define RF430CL330H_BOOSTERPACK_RESET_PIN  8
 #define RF430CL330H_BOOSTERPACK_IRQ_PIN    12
@@ -25,11 +25,11 @@ void setup() {
   Serial.println("Initializing NFC Tag-");
   nfc.begin();
 
-  Serial.println("Declaring URL object-");
-  NDEF_URI tiweb("http://www.ti.com");
+  Serial.println("Declaring Text object-");
+  NDEF_TXT t("en", "Mary had a little lamb.");
 
-  Serial.println("Writing URL object to NFC transceiver-");
-  int ndef_size = tiweb.sendTo(nfc);  // Export URI NDEF object to RF430's SRAM
+  Serial.println("Writing Text object to NFC transceiver-");
+  int ndef_size = t.sendTo(nfc);  // Export Text NDEF object to RF430's SRAM
 
   Serial.print("Configuring NDEF record size (");
     Serial.print(ndef_size);
@@ -41,10 +41,10 @@ void setup() {
 
   Serial.println("Activating NFC transceiver-");
   nfc.enable();
-  // NDEF URI object is now live and available over the air!
+  // NDEF Text object is now live and available over the air!
 
-  Serial.println("Printing URL to Serial port-");
-  tiweb.printURI(Serial);  // Test the NDEF_URI printURI() feature
+  Serial.println("Printing Text to Serial port-");
+  Serial.println(t.getText());
 }
 
 void loop() {

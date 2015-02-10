@@ -22,159 +22,163 @@
  *  DEALINGS IN THE SOFTWARE.
  */
 
-#include "NDEF_URI.h"
+#include "NDEF_TXT.h"
 
-const uint8_t ndef_uri_record_type = 'U';
+const uint8_t ndef_txt_record_type = 'T';
 
-const char *ndef_uri_prefixes[] = {
-    "",
-    "http://www.", // 11
-    "https://www.", // 12
-    "http://", // 7
-    "https://", // 8
-    "tel:", // 4
-    "mailto:", // 7
-    "ftp://anonymous:anonymous@", // 26
-    "ftp://ftp.", // 10
-    "ftps://", // 7
-    "sftp://", // 7
-    "smb://", // 6
-    "nfs://", // 6
-    "ftp://", // 6
-    "dav://", // 6
-    "news:", // 5
-    "telnet://", // 9
-    "imap:", // 5
-    "rtsp://", // 7
-    "urn:", // 4
-    "pop:", // 4
-    "sip:", // 4
-    "sips:", // 5
-    "tftp:", // 5
-    "btspp://", // 8
-    "btl2cap://", // 10
-    "btgoep://", // 9
-    "tcpobex://", // 10
-    "irdaobex://", // 11
-    "file://", // 7
-    "urn:epc:id:", // 11
-    "urn:epc:tag:", // 12
-    "urn:epc:pat:", // 12
-    "urn:epc:raw:", // 12
-    "urn:epc:", // 8
-    "urn:nfc:" // 8
-};
-
-const uint8_t ndef_uri_prefixes_strlen[] = {
-    0, 11, 12, 7, 8, 4, 7, 26, 10, 7, 7, 6, 6, 6, 6, 5, 9, 5, 7, 4, 4, 4, 5, 5, 8, 10, 9, 10, 11, 7, 11, 12, 12, 12, 8, 8
-};
-
-NDEF_URI::NDEF_URI()
+NDEF_TXT::NDEF_TXT()
 {
     tnf = NDEF_TRF_WELLKNOWN;
     type_length = 1;
-    type = (char *)&ndef_uri_record_type;
+    type = (char *)&ndef_txt_record_type;
     id_length = 0;
     id = NULL;
     payload_length = 0;
     payload_buf_maxlen = 0;
     payload = NULL;
-    prefix = 0x00;
+
+    // English by default
+    strcpy(lang, "en");
+    lang_length = 2;
+
+    is_utf16 = false;  // UTF-8 by default
 }
 
-NDEF_URI::NDEF_URI(const char *uri)
+NDEF_TXT::NDEF_TXT(const char *lang_)
 {
     tnf = NDEF_TRF_WELLKNOWN;
     type_length = 1;
-    type = (char *)&ndef_uri_record_type;
+    type = (char *)&ndef_txt_record_type;
     id_length = 0;
     id = NULL;
-    prefix = compressPrefix(uri);
-    size_t plen = ndef_uri_prefixes_strlen[prefix];
-    payload_length = strlen(uri) - plen;
-    payload = (uint8_t *)uri + plen;
-    payload_buf_maxlen = 0;  // not used here
+    payload_length = 0;
+    payload_buf_maxlen = 0;
+    payload = NULL;
+
+    lang_length = strlen(lang_);
+    if (lang_length > 8) {  // Invalid for this library; use "en" per defaults.
+        strcpy(lang, "en");
+        lang_length = 2;
+    } else {
+        strncpy(lang, lang_, lang_length);
+    }
+
+    is_utf16 = false;  // UTF-8 by default
 }
 
-uint8_t NDEF_URI::compressPrefix(const char *uri)
+NDEF_TXT::NDEF_TXT(const char *lang_, const char *text_)
+{
+    tnf = NDEF_TRF_WELLKNOWN;
+    type_length = 1;
+    type = (char *)&ndef_txt_record_type;
+    id_length = 0;
+    id = NULL;
+    payload = (uint8_t *)text_;
+    payload_length = strlen(text_);
+    payload_buf_maxlen = 0;
+
+    lang_length = strlen(lang_);
+    if (lang_length > 8) {  // Invalid for this library; use "en" per defaults.
+        strcpy(lang, "en");
+        lang_length = 2;
+    } else {
+        strncpy(lang, lang_, lang_length);
+    }
+
+    is_utf16 = false;  // UTF-8 by default
+}
+
+void NDEF_TXT::setLanguage(const char *lang_)
+{
+    lang_length = strlen(lang_);
+
+    if (lang_length > 8) {  // Invalid for this library; bail without changing
+        return;
+    } else {
+        strncpy(lang, lang_, lang_length);
+    }
+}
+
+/* Perform a semi-intelligent test comparing the intended language "l" with
+ * the actual language specifier to see if it's a subset; e.g. for lang[] = "en-US",
+ * searching for l[] = "en" should suffice.
+ */
+boolean NDEF_TXT::testLanguage(const char *l)
 {
     int i;
-    size_t ulen, clen;
-    uint8_t pfx = 0x00;
+    char langlow[9], llow[9];
 
-    if (uri == NULL || uri[0] == '\0')
-        return 0x00;
-    ulen = strlen(uri);
+    if (l == NULL)
+        return false;
+    size_t llen = strlen(l);
+    if (!llen)
+        return false;
 
-    for (i=1; i < 0x36; i++) {
-        clen = ndef_uri_prefixes_strlen[i];
-        if (clen > ulen)
-            clen = ulen;
+    if (llen > lang_length)
+        return false;
 
-        if (!strncmp(uri, ndef_uri_prefixes[i], clen)) {
-            pfx = i;
-            break;
-        }
+    // Copy strings into temporary buffers with lowercase
+    for (i=0; i < lang_length; i++) {
+        langlow[i] = lang[i];
+        if (langlow[i] >= 'A' && langlow[i] <= 'Z')
+            langlow[i] += 32;
     }
-    if (pfx == 0x00)
-        return 0x00;
+    langlow[i] = '\0';
+    for (i=0; i < llen; i++) {
+        llow[i] = l[i];
+        if (llow[i] >= 'A' && llow[i] <= 'Z')
+            llow[i] += 32;
+    }
+    llow[i] = '\0';
 
-    return pfx;
-}
-
-const char * NDEF_URI::decompressPrefix(const uint8_t pfx)
-{
-    if (pfx < 0x01 || pfx > 0x35)
-        return "";
-    return ndef_uri_prefixes[pfx];
-}
-
-int NDEF_URI::setURI(const char *uri)
-{
-    if (uri == NULL || uri[0] == '\0')
-        return 0;
-
-    prefix = compressPrefix(uri);
-    size_t plen = ndef_uri_prefixes_strlen[prefix];
-    payload_length = strlen(uri) - plen;
-    payload = (uint8_t *)uri + plen;
-    payload_buf_maxlen = 0;  // not used here
-
-    return payload_length;
-}
-
-int NDEF_URI::storeURI(char *buf, size_t maxlen)
-{
-    int total_size = 0;
-
-    if (buf == NULL || maxlen < 1)
-        return -1;
-    if (maxlen < ndef_uri_prefixes_strlen[prefix])
-        return -1;
-
-    strcpy(buf, ndef_uri_prefixes[prefix]);
-    total_size = ndef_uri_prefixes_strlen[prefix];
-
-    if (maxlen < payload_length) {
-        strncat(buf, (char *)payload, maxlen-1);
-        total_size += maxlen-1;
-    } else {
-        strncat(buf, (char *)payload, payload_length);
-        total_size += payload_length;
+    // Compare
+    if (llen == lang_length) {
+        if (!strncmp(llow, langlow, llen))
+            return true;
+        return false;
     }
 
-    return total_size;
+    if (strchr(llow, '-') == NULL && langlow[llen] == '-' && !strncmp(llow, langlow, llen))  // Search is specifying a subset, e.g. "en" out of "en-US"
+        return true;
+
+    return false;
 }
 
-int NDEF_URI::printURI(Print &p)
+int NDEF_TXT::setText(const char *text)
 {
-    p.write((const uint8_t *)ndef_uri_prefixes[prefix], ndef_uri_prefixes_strlen[prefix]);
-    p.write((const uint8_t *)payload, payload_length);
+    if (!payload_buf_maxlen) {
+        // No payload buffer exists, so instead we must be intending to replace the payload entirely
+        payload = (uint8_t *)text;
+        payload_length = strlen(text);
+        return payload_length;
+    }
+
+    // Payload buffer exists; stuff it with as much as can fit
+    size_t tlen = strlen(text);
+    if (tlen > payload_buf_maxlen)
+        tlen = payload_buf_maxlen;
+
+    strncpy((char *)payload, text, tlen);
+    return tlen;
 }
 
-int NDEF_URI::sendTo(Print &p)
+int NDEF_TXT::appendText(const char *text)
 {
-    uint32_t real_plen = payload_length + 1;
+    if (!payload_buf_maxlen)
+        return 0;  // Not possible!  This isn't a general-purpose writable buffer.
+
+    size_t tlen = strlen(text);
+    if (tlen > (payload_buf_maxlen - payload_length))
+        tlen = payload_buf_maxlen - payload_length;
+
+    strncat((char *)payload, text, tlen);
+    return tlen;
+}
+
+// TODO: Adapt for TXT
+int NDEF_TXT::sendTo(Print &p)
+{
+    uint32_t real_plen = payload_length + lang_length + 1;
     int printedSize = 0;
 
     // Output valid NDEF binary format
@@ -200,8 +204,15 @@ int NDEF_URI::sendTo(Print &p)
     }
     p.write((uint8_t) type[0]);  // TYPE
     // PAYLOAD
-    p.write(prefix);
+    if (is_utf16)
+        p.write(NDEF_RTD_TEXT_STATUS_UTF16 | lang_length);
+    else
+        p.write(lang_length);
     printedSize += 2;
+
+    p.write((const uint8_t *)lang, lang_length);
+    printedSize += lang_length;
+
     p.write((const uint8_t *)payload, payload_length);
     printedSize += payload_length;
     // NOTE: printedSize may be a smaller variable than payload_length
@@ -209,10 +220,10 @@ int NDEF_URI::sendTo(Print &p)
     return printedSize;
 }
 
-int NDEF_URI::import(Stream &s)
+int NDEF_TXT::import(Stream &s)
 {
     int c, ndef_hdr;
-    size_t plen, plen_write;
+    size_t plen, plen_write, llen;
     uint8_t plen32[4];
 
     // Requires setPayloadBuffer() to have been used previously
@@ -251,9 +262,22 @@ int NDEF_URI::import(Stream &s)
 
     // read PAYLOAD
     c = s.read();       if (c < 0) return -1;
-    if (c < 0x01 || c > 0x35)
+    if ( (c & 0x3F) < 1 || (c & 0x40) )
         return -1;  // Invalid abbreviation byte
+    if (c & NDEF_RTD_TEXT_STATUS_UTF16)
+        is_utf16 = true;
+    else
+        is_utf16 = false;
     plen--;
+
+    // read LANGUAGE
+    llen = c & 0x3F;
+    if (llen > 8)
+        return -1;  // We're not supporting >8 byte language codes for now
+    if (s.readBytes(lang, llen) < llen)
+        return -1;
+    lang_length = llen;
+    plen -= llen;
 
     plen_write = plen;  // Max # of bytes writable to payload[] before we just read & discard
     if (payload_buf_maxlen < plen_write)

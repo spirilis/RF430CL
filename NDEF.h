@@ -61,7 +61,7 @@ class NDEF {
         virtual void setID(const char *id_) { id = (char *)id_; id_length = strlen(id_); };
         // Payload details will be left to sub-classes as it will depend entirely on context
 
-        virtual int export(Print &p);
+        virtual int sendTo(Print &p);
         virtual int import(Stream &s);
 };
 
