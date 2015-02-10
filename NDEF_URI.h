@@ -45,7 +45,7 @@ class NDEF_URI : public NDEF {
         int storeURI(char *buf, size_t maxlen);
         int printURI(Print &p);
 
-        int sendTo(Print &p);   // For outputting to a suitable NFC passive device
+        int sendTo(Print &p, boolean first_msg = true, boolean last_msg = true);   // For outputting to a suitable NFC passive device
         int import(Stream &s);  // For reading from a suitable NFC passive device, or any form of stream
 };
 

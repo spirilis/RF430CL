@@ -175,17 +175,23 @@ int NDEF_TXT::appendText(const char *text)
     return tlen;
 }
 
-// TODO: Adapt for TXT
-int NDEF_TXT::sendTo(Print &p)
+int NDEF_TXT::sendTo(Print &p, boolean first_msg, boolean last_msg)
 {
     uint32_t real_plen = payload_length + lang_length + 1;
     int printedSize = 0;
+    uint8_t msghdr;
 
     // Output valid NDEF binary format
+    msghdr = 0x00;
+    if (first_msg)
+        msghdr |= NDEF_FIELD_MB;
+    if (last_msg)
+        msghdr |= NDEF_FIELD_ME;
+
     if (real_plen > 254) {
-        p.write(tnf | NDEF_FIELD_MB | NDEF_FIELD_ME);  // SR cleared, using 32-bit Payload Length
+        p.write(tnf | msghdr);  // SR cleared, using 32-bit Payload Length
     } else {
-        p.write(tnf | NDEF_FIELD_MB | NDEF_FIELD_ME | NDEF_FIELD_SR);
+        p.write(tnf | msghdr | NDEF_FIELD_SR);
     }
     p.write(1);  // Length of TYPE field
     printedSize = 2;
