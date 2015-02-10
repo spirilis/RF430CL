@@ -41,7 +41,7 @@ class NDEF_TXT : public NDEF {
     public:
         NDEF_TXT();
         NDEF_TXT(const char *lang_);
-        NDEF_TXT(const char *lang_, const char *text_);
+        NDEF_TXT(const char *lang_, const char *text_, boolean utf16 = false);
 
         int setText(const char *text);
         int setText(const uint8_t *text) { return setText((const char *)text); };

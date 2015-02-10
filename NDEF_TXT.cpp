@@ -66,7 +66,7 @@ NDEF_TXT::NDEF_TXT(const char *lang_)
     is_utf16 = false;  // UTF-8 by default
 }
 
-NDEF_TXT::NDEF_TXT(const char *lang_, const char *text_)
+NDEF_TXT::NDEF_TXT(const char *lang_, const char *text_, boolean utf16)
 {
     tnf = NDEF_TRF_WELLKNOWN;
     type_length = 1;
@@ -85,7 +85,7 @@ NDEF_TXT::NDEF_TXT(const char *lang_, const char *text_)
         strncpy(lang, lang_, lang_length);
     }
 
-    is_utf16 = false;  // UTF-8 by default
+    is_utf16 = utf16;
 }
 
 void NDEF_TXT::setLanguage(const char *lang_)
