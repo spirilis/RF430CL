@@ -238,7 +238,7 @@ int NDEF_TXT::import(Stream &s)
 
     // read NDEF header byte
     c = s.read();       if (c < 0) return -1;
-    if ( !(c & NDEF_FIELD_MB) || (c & NDEF_FIELD_IL) || ((c & 0x03) != NDEF_TRF_WELLKNOWN) )
+    if ( (c & NDEF_FIELD_IL) || ((c & 0x03) != NDEF_TRF_WELLKNOWN) )
         return -1;  // Not a URI RTD...
     ndef_hdr = c;
 
