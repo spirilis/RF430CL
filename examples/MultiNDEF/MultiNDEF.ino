@@ -70,7 +70,7 @@ void setup() {
 
   Serial.println("Activating NFC transceiver-");
   nfc.enable();
-  // NDEF URI object is now live and available over the air!
+  // NDEF URI & TEXT objects are now live and available over the air!
 
   Serial.println("Printing URL to Serial port-");
   tiweb.printURI(Serial);  // Test the NDEF_URI printURI() feature

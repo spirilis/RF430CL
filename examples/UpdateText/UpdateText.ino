@@ -75,7 +75,7 @@ void loop() {
     nfc.disable();  // Disable RF before updating SRAM contents
     nfc.setDataPointer(0);  // We're rewriting the NFC tag's SRAM
     size_t ndef_size = txt.sendTo(nfc);  // Write new NDEF data
-    nfc.setDataLength(ndef_size);
+    nfc.setDataLength(ndef_size);  // Always need this accurate to the current SRAM contents.
     nfc.enable();  // Make it live!
     Serial.println("Tag updated.");
 
