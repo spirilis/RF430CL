@@ -39,7 +39,7 @@ class NDEF_URI : public NDEF {
         NDEF_URI(const char *uri);
 
         int setURI(const char *uri);
-        void setPayloadBuffer(uint8_t *buf, size_t maxlen) { payload = buf; payload_buf_maxlen = maxlen; };
+        void setPayloadBuffer(uint8_t *buf, size_t maxlen) { payload = buf; payload_buf_maxlen = maxlen; payload_length = 0; };
         static uint8_t compressPrefix(const char *uri);
         static const char * decompressPrefix(const uint8_t pfx);
         int storeURI(char *buf, size_t maxlen);

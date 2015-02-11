@@ -47,7 +47,7 @@
 #define NDEF_TRF_UNKNOWN 0x05
 #define NDEF_TRF_UNCHANGED 0x06
 
-class NDEF {
+class NDEF : public Print {
     protected:
         uint8_t tnf;
         unsigned int type_length, id_length;
@@ -63,6 +63,10 @@ class NDEF {
 
         virtual int sendTo(Print &p, boolean first_msg = true, boolean last_msg = true);
         virtual int import(Stream &s);
+
+        // To be overridden by subclasses if applicable
+        virtual size_t write(const uint8_t *buf, size_t len) { return 0; };
+        virtual size_t write(uint8_t) { return 0; };
 };
 
 #endif /* NDEF_H */

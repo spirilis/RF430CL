@@ -42,15 +42,31 @@ class NDEF_TXT : public NDEF {
         NDEF_TXT();
         NDEF_TXT(const char *lang_);
         NDEF_TXT(const char *lang_, const char *text_, boolean utf16 = false);
+        /* ^ NOTE: Declaring an NDEF_TXT object with a constant string implies there is no general-purpose buffer
+         * associated with this object, which means write() and thus print(), println() etc can't work.
+         *
+         * This can be overridden using setPayloadBuffer() with a suitable RAM-based buffer but the original declared
+         * string will no longer be referenced by the object.
+         */
 
         int setText(const char *text);
         int setText(const uint8_t *text) { return setText((const char *)text); };
         char * getText() { return (char *)payload; };
+        /* ^ NOTE: running setText() after setPayloadBuffer() will copy the contents to the payload buffer,
+         * allowing the user to append text to it using write(), print() and println().
+         *
+         * But setText() run on an object that has never had setPayloadBuffer() ran will simply substitute the
+         * supplied string pointer for the one presently referenced by the object.  Payload length is calculated
+         * using strlen() at the time setText() is ran.
+         */
 
-        int appendText(const char *text);
-        int appendText(const uint8_t *text) { return appendText((const char *)text); };
+        size_t write(const uint8_t *buf, size_t len);
+        size_t write(uint8_t c);
+        /* ^ Append text to a general-purpose payload buffer, if one was supplied previously using
+         * the setPayloadBuffer() function.  This will fail (returning 0) if the buffer is full.
+         */
 
-        void setPayloadBuffer(uint8_t *buf, size_t maxlen) { payload = buf; payload_buf_maxlen = maxlen; };
+        void setPayloadBuffer(uint8_t *buf, size_t maxlen) { payload = buf; payload_buf_maxlen = maxlen; payload_length = 0; };
 
         void setUTF16(boolean tf) { is_utf16 = tf; };
         boolean isUTF16() { return is_utf16; };

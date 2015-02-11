@@ -159,20 +159,34 @@ int NDEF_TXT::setText(const char *text)
         tlen = payload_buf_maxlen;
 
     strncpy((char *)payload, text, tlen);
+    payload_length = tlen;
     return tlen;
 }
 
-int NDEF_TXT::appendText(const char *text)
+size_t NDEF_TXT::write(const uint8_t *text, size_t len)
 {
     if (!payload_buf_maxlen)
         return 0;  // Not possible!  This isn't a general-purpose writable buffer.
 
-    size_t tlen = strlen(text);
-    if (tlen > (payload_buf_maxlen - payload_length))
-        tlen = payload_buf_maxlen - payload_length;
+    if (len > (payload_buf_maxlen - payload_length))
+        len = payload_buf_maxlen - payload_length;
 
-    strncat((char *)payload, text, tlen);
-    return tlen;
+    strncat((char *)payload, (const char *)text, len);
+    payload_length += len;
+    return len;
+}
+
+size_t NDEF_TXT::write(uint8_t c)
+{
+    if (!payload_buf_maxlen)
+        return 0;  // Not possible!  This isn't a general-purpose writable buffer.
+
+    if (payload_length == payload_buf_maxlen)
+        return 0;  // No more room!
+
+    payload[payload_length++] = c;
+    payload[payload_length] = '\0';
+    return 1;
 }
 
 int NDEF_TXT::sendTo(Print &p, boolean first_msg, boolean last_msg)
