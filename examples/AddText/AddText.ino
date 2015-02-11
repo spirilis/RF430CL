@@ -45,7 +45,7 @@ void setup() {
   Serial.println("Writing Text object to NFC transceiver-");
   int ndef_size = t.sendTo(nfc);  // Export Text NDEF object to RF430's SRAM
 
-  Serial.print("Configuring NDEF record size (");
+  Serial.print("Configuring NDEF message size (");
     Serial.print(ndef_size);
     Serial.println(" bytes)");
   nfc.setDataLength(ndef_size);

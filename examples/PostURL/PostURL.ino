@@ -31,7 +31,7 @@ void setup() {
   Serial.println("Writing URL object to NFC transceiver-");
   int ndef_size = tiweb.sendTo(nfc);  // Export URI NDEF object to RF430's SRAM
 
-  Serial.print("Configuring NDEF record size (");
+  Serial.print("Configuring NDEF message size (");
     Serial.print(ndef_size);
     Serial.println(" bytes)");
   nfc.setDataLength(ndef_size);
