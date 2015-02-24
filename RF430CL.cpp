@@ -45,7 +45,6 @@ RF430::RF430(int resetPin_, int irqPin_)
 void RF430::begin()
 {
     uint16_t reg;
-    uint8_t buf[2];
 
     pinMode(resetPin, OUTPUT);
     digitalWrite(resetPin, LOW);  // Reset
@@ -81,6 +80,7 @@ void RF430::begin()
         writeReg(0xFFE0, 0x0000);  // Exit TEST mode
     }
 
+    data_ptr = RF430_SRAMFS_NDEF_START;
 }
 
 void RF430::end()
@@ -102,6 +102,7 @@ void RF430::disable()
     uint16_t r = readReg(RF430_REG_STATUS);
 
     while ( !(r & RF430_STATUS_READY) ) {  // Wait for in-progress RF communication to stop
+        Serial.print('.');
         delay(20);
         r = readReg(RF430_REG_STATUS);
     }
@@ -260,19 +261,77 @@ const uint8_t ndef_sram_fs_format[] = {
     // First 2 bytes are big-endian specifier of NDEF file size
 };
 
+const uint8_t ndef_default_blank[] = {
+    NDEF_FIELD_MB | NDEF_FIELD_ME | NDEF_FIELD_SR | NDEF_TRF_EMPTY,
+    0x00, 0x00  // No type field, no payload
+};
+
 void RF430::format(void)
 {
     writeSRAM(0x0000, ndef_sram_fs_format, sizeof(ndef_sram_fs_format));
-    setDataLength(0);
+    writeSRAM(RF430_SRAMFS_NDEF_START, ndef_default_blank, 3);
+    setDataLength(3);
 }
 
 void RF430::setDataLength(uint16_t len)
 {
     uint8_t buf[2];
 
-    data_ptr = RF430_SRAMFS_NDEF_LENGTH_WORD;
     // Since this is an NFC Forum standardized field, it's encoded Big-Endian.
     buf[0] = len >> 8;
     buf[1] = len & 0xFF;
-    write(buf, 2);
+    writeSRAM(RF430_SRAMFS_NDEF_LENGTH_WORD, buf, 2);
+    end_of_ndef = RF430_SRAMFS_NDEF_START + len;
+}
+
+uint16_t RF430::getDataLength(void)
+{
+    uint8_t buf[2];
+
+    readSRAM(RF430_SRAMFS_NDEF_LENGTH_WORD, buf, 2);
+    return ( (buf[0] << 8) | buf[1] );
+}
+
+int RF430::loop(boolean use_irq_line)
+{
+    // Check IRQs
+    uint8_t irq;
+
+    if (use_irq_line && digitalRead(irqPin) == HIGH)
+        return false;
+
+    if (is_rf_active)
+        disable();  // Disable RF before reading from device
+
+    irq = readReg(RF430_REG_INT_FLAG);
+    last_known_irq |= irq;
+
+    if (irq & RF430_INT_END_OF_WRITE) {
+        uint8_t bytes[2];
+        readSRAM(RF430_SRAMFS_NDEF_LENGTH_WORD, bytes, 2);
+        end_of_ndef = RF430_SRAMFS_NDEF_START;
+        end_of_ndef += (bytes[0] << 8) | bytes[1];
+        data_ptr = RF430_SRAMFS_NDEF_START;  // Read new NDEF size, reset pointer to 0
+    }
+
+    if (irq) {
+        // Quirk I've found; IRQ line won't clear unless INT_ENABLE is disabled before clearing IRQs.
+        // The RF430 example code from TI includes this without much explanation.
+        writeReg(RF430_REG_INT_ENABLE, 0x0000);
+        writeReg(RF430_REG_INT_FLAG, irq);  // Clear IRQs
+        writeReg(RF430_REG_INT_ENABLE, RF430_INT_END_OF_READ | RF430_INT_END_OF_WRITE | RF430_INT_CRC_COMPLETED | RF430_INT_NDEF_ERROR | RF430_INT_GENERIC_ERROR);
+        return true;
+    }
+    return false;
+}
+
+// Check if RF430_INT_END_OF_READ has recently been discovered, then clear it from our internal variable.
+int RF430::wasRead(void)
+{
+    if (last_known_irq & RF430_INT_END_OF_READ) {
+        last_known_irq &= ~RF430_INT_END_OF_READ;
+        return true;
+    }
+
+    return false;
 }

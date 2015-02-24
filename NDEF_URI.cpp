@@ -260,6 +260,7 @@ int NDEF_URI::import(Stream &s)
     c = s.read();       if (c < 0) return -1;
     if (c < 0x01 || c > 0x35)
         return -1;  // Invalid abbreviation byte
+    prefix = c;
     plen--;
 
     plen_write = plen;  // Max # of bytes writable to payload[] before we just read & discard

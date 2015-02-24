@@ -29,6 +29,7 @@
 #include <Wire.h>
 #include <Stream.h>
 #include <Print.h>
+#include "NDEF.h"
 
 // For non-MSP430 chips
 #ifndef BITF
@@ -118,13 +119,15 @@ class RF430 : public Stream {
         // Internal I/O
         void writeReg(uint16_t addr, uint16_t val);
         void writeSRAM(uint16_t start, const uint8_t *, size_t len); // Write to true start of SRAM (0x0000)
+        void format(void);
+
         size_t write(uint8_t);
         size_t write(const uint8_t *, size_t);
         void setDataPointer(uint16_t addr) { data_ptr = addr + RF430_SRAMFS_NDEF_START; };  // Address positioned relative to start of NDEF file
         void setDataPointerReal(uint16_t addr) { data_ptr = addr; };  // Address positioned to real SRAM location
         void setDataLength(uint16_t len);  // Write the 2 bytes (big-endian 16 bit) just before NDEF file
         uint16_t getDataPointer(void) { return data_ptr - RF430_SRAMFS_NDEF_START; };  // Position relative to start of NDEF file
-        void format(void);
+        uint16_t getDataLength(void);
 
         uint16_t readReg(uint16_t addr);
         void readSRAM(uint16_t start, uint8_t *, size_t len);  // Read from true start of SRAM (0x0000)
@@ -135,7 +138,9 @@ class RF430 : public Stream {
         int available() { if (last_known_irq & RF430_INT_END_OF_WRITE) { return true; }; return false; };
 
         // IRQ handling
-        int loop();  // Check and clear IRQs
+        int loop(boolean use_irq_line=true);  // Check and clear IRQs; use no argument unless you know what you're doing
+        int wasRead();
+        int isError() { if (last_known_irq & RF430_INT_NDEF_ERROR) { last_known_irq &= ~RF430_INT_NDEF_ERROR; return true; }; return false; };
 };
 
 #endif /* RF430CL_H */

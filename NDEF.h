@@ -61,6 +61,7 @@ class NDEF : public Print {
         virtual void setID(const char *id_) { id = (char *)id_; id_length = strlen(id_); };
         // Payload details will be left to sub-classes as it will depend entirely on context
 
+        // Default implementations of these exist, but subclasses are encouraged to override if it's convenient.
         virtual int sendTo(Print &p, boolean first_msg = true, boolean last_msg = true);
         virtual int import(Stream &s);
 

@@ -62,7 +62,19 @@ void setup() {
 }
 
 void loop() {
-  delay(1000);
+  if (nfc.loop()) {
+    if (nfc.wasRead()) {
+      Serial.println("NDEF tag was read!");
+    }
+    if (nfc.available()) {
+      Serial.print("NFC master has written a new tag! ");
+      uint16_t len = nfc.getDataLength();
+      Serial.print(len);
+      Serial.println(" bytes");
+      nfc.flush();  // prevent nfc.available() from returning true again
+    }
+    nfc.enable();
+  }
 }
 
 //void DumpSRAM() {
