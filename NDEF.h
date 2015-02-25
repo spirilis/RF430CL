@@ -52,21 +52,23 @@ class NDEF : public Print {
         unsigned int type_length, id_length;
         size_t payload_length;
         uint8_t *payload;
-        size_t payload_buf_maxlen;
+        size_t payload_buf_maxlen, type_buf_maxlen, id_buf_maxlen;
         char *type;
         char *id;
 
     public:
         NDEF();
-        virtual void setTypeAndIDBuffer(void *typebuf, void *idbuf) { type = typebuf; id = idbuf; };
-        virtual void setType(const char *type_) { type = (char *)type_; type_length = strlen(type_); };
+        virtual void setTypeBuffer(void *typebuf, size_t maxlen) { type = (char *)typebuf; type_buf_maxlen = maxlen; };
+        virtual void setIDBuffer(void *idbuf, size_t maxlen) { id = (char *)idbuf; id_buf_maxlen = maxlen; };
+        virtual void setType(const char *type_) { type = (char *)type_; type_length = strlen(type_); type_buf_maxlen = 0; };
         virtual char * getType(void) { return type; };
-        virtual void setID(const char *id_) { id = (char *)id_; id_length = strlen(id_); };
+        virtual void setID(const char *id_) { id = (char *)id_; id_length = strlen(id_); id_buf_maxlen = 0; };
         virtual char * getID(void) { return id; };
+	virtual uint8_t getTNF(void) { return tnf; };
 
         // Basic payload buffers support generic NDEF import/export
         virtual void setPayloadBuffer(void *buf, size_t maxlen) { payload = (uint8_t *)buf; payload_buf_maxlen = maxlen; payload_length = 0; };
-        virtual void * getPayloadBuffer(void) { return (void *)payload; };
+        virtual const uint8_t * getPayload(void) { return (const uint8_t *)payload; };
         virtual size_t getPayloadLength(void) { return payload_length; };
 
         // Default implementations of these exist, but subclasses are encouraged to override if it's convenient.
