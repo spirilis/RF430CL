@@ -57,11 +57,11 @@ void loop() {
 
   Serial.println("<low power sleep>");
   Serial.flush();  // wait for unsent UART data to flush out before going into low-power sleep
-  suspend();
+  suspend();  // Enter indefinite sleep (LPM4 on MSP430, DEEPSLEEP on ARM)
   Serial.println("<wake up>");
 }
 
 void wake_up()
 {
-  wakeup();  // Signal to Energia to wake the MCU upon IRQ exit
+  wakeup();  // Signal Energia to wake the MCU upon IRQ exit
 }
