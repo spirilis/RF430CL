@@ -31,15 +31,12 @@ class NDEF_URI : public NDEF {
     protected:
         // Inherited: tnf, type_length, id_length, payload_length, type, id, payload
         uint8_t prefix;
-        // payload is reused as the pointer to URI
-        size_t payload_buf_maxlen;
 
     public:
         NDEF_URI();
         NDEF_URI(const char *uri);
 
         int setURI(const char *uri);
-        void setPayloadBuffer(uint8_t *buf, size_t maxlen) { payload = buf; payload_buf_maxlen = maxlen; payload_length = 0; };
         static uint8_t compressPrefix(const char *uri);
         static const char * decompressPrefix(const uint8_t pfx);
         int storeURI(char *buf, size_t maxlen);

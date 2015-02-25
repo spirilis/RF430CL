@@ -28,7 +28,6 @@
 #define NDEF_H
 
 #include <Arduino.h>
-#include <Stream.h>
 #include <Print.h>
 
 /* NDEF fields */
@@ -38,30 +37,40 @@
 #define NDEF_FIELD_ME 0x40       // Message End
 #define NDEF_FIELD_MB 0x80       // Message Begin
 
-/* TRF fields (lower 3 bits of NDEF header) */
-#define NDEF_TRF_EMPTY 0x00
-#define NDEF_TRF_WELLKNOWN 0x01
-#define NDEF_TRF_MEDIA 0x02
-#define NDEF_TRF_ABSOLUTE_URI 0x03
-#define NDEF_TRF_EXTERNAL 0x04
-#define NDEF_TRF_UNKNOWN 0x05
-#define NDEF_TRF_UNCHANGED 0x06
+/* TNF fields (lower 3 bits of NDEF header) */
+#define NDEF_TNF_EMPTY 0x00
+#define NDEF_TNF_WELLKNOWN 0x01
+#define NDEF_TNF_MEDIA 0x02
+#define NDEF_TNF_ABSOLUTE_URI 0x03
+#define NDEF_TNF_EXTERNAL 0x04
+#define NDEF_TNF_UNKNOWN 0x05
+#define NDEF_TNF_UNCHANGED 0x06
 
 class NDEF : public Print {
     protected:
         uint8_t tnf;
         unsigned int type_length, id_length;
-        uint32_t payload_length;
+        size_t payload_length;
         uint8_t *payload;
+        size_t payload_buf_maxlen;
         char *type;
         char *id;
 
     public:
+        NDEF();
+        virtual void setTypeAndIDBuffer(void *typebuf, void *idbuf) { type = typebuf; id = idbuf; };
         virtual void setType(const char *type_) { type = (char *)type_; type_length = strlen(type_); };
+        virtual char * getType(void) { return type; };
         virtual void setID(const char *id_) { id = (char *)id_; id_length = strlen(id_); };
-        // Payload details will be left to sub-classes as it will depend entirely on context
+        virtual char * getID(void) { return id; };
+
+        // Basic payload buffers support generic NDEF import/export
+        virtual void setPayloadBuffer(void *buf, size_t maxlen) { payload = (uint8_t *)buf; payload_buf_maxlen = maxlen; payload_length = 0; };
+        virtual void * getPayloadBuffer(void) { return (void *)payload; };
+        virtual size_t getPayloadLength(void) { return payload_length; };
 
         // Default implementations of these exist, but subclasses are encouraged to override if it's convenient.
+        // This is especially true when the payload contents need to be interpreted or segregated into different buffers.
         virtual int sendTo(Print &p, boolean first_msg = true, boolean last_msg = true);
         virtual int import(Stream &s);
 

@@ -28,7 +28,7 @@ const uint8_t ndef_txt_record_type = 'T';
 
 NDEF_TXT::NDEF_TXT()
 {
-    tnf = NDEF_TRF_WELLKNOWN;
+    tnf = NDEF_TNF_WELLKNOWN;
     type_length = 1;
     type = (char *)&ndef_txt_record_type;
     id_length = 0;
@@ -46,7 +46,7 @@ NDEF_TXT::NDEF_TXT()
 
 NDEF_TXT::NDEF_TXT(const char *lang_)
 {
-    tnf = NDEF_TRF_WELLKNOWN;
+    tnf = NDEF_TNF_WELLKNOWN;
     type_length = 1;
     type = (char *)&ndef_txt_record_type;
     id_length = 0;
@@ -68,7 +68,7 @@ NDEF_TXT::NDEF_TXT(const char *lang_)
 
 NDEF_TXT::NDEF_TXT(const char *lang_, const char *text_, boolean utf16)
 {
-    tnf = NDEF_TRF_WELLKNOWN;
+    tnf = NDEF_TNF_WELLKNOWN;
     type_length = 1;
     type = (char *)&ndef_txt_record_type;
     id_length = 0;
@@ -252,7 +252,7 @@ int NDEF_TXT::import(Stream &s)
 
     // read NDEF header byte
     c = s.read();       if (c < 0) return -1;
-    if ( (c & NDEF_FIELD_IL) || ((c & 0x03) != NDEF_TRF_WELLKNOWN) )
+    if ( (c & NDEF_FIELD_IL) || ((c & 0x03) != NDEF_TNF_WELLKNOWN) )
         return -1;  // Not a URI RTD...
     ndef_hdr = c;
 

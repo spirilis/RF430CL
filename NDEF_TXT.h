@@ -31,9 +31,8 @@
 
 class NDEF_TXT : public NDEF {
     protected:
-        // Inherited: tnf, type_length, id_length, payload_length, type, id, payload
+        // Inherited: tnf, type_length, id_length, payload_length, payload_buf_maxlen, type, id, payload
         // payload is reused as the pointer to URI
-        size_t payload_buf_maxlen;
         boolean is_utf16;
         char lang[8];
         size_t lang_length;
@@ -65,8 +64,6 @@ class NDEF_TXT : public NDEF {
         /* ^ Append text to a general-purpose payload buffer, if one was supplied previously using
          * the setPayloadBuffer() function.  This will fail (returning 0) if the buffer is full.
          */
-
-        void setPayloadBuffer(uint8_t *buf, size_t maxlen) { payload = buf; payload_buf_maxlen = maxlen; payload_length = 0; };
 
         void setUTF16(boolean tf) { is_utf16 = tf; };
         boolean isUTF16() { return is_utf16; };

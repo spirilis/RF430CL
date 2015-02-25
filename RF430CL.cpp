@@ -262,7 +262,7 @@ const uint8_t ndef_sram_fs_format[] = {
 };
 
 const uint8_t ndef_default_blank[] = {
-    NDEF_FIELD_MB | NDEF_FIELD_ME | NDEF_FIELD_SR | NDEF_TRF_EMPTY,
+    NDEF_FIELD_MB | NDEF_FIELD_ME | NDEF_FIELD_SR | NDEF_TNF_EMPTY,
     0x00, 0x00  // No type field, no payload
 };
 
