@@ -31,6 +31,7 @@ RF430::RF430(int resetPin_, int irqPin_, uint8_t i2caddr_)
     i2caddr = i2caddr_;
     is_rf_active = false;
     data_ptr = 0;
+    i2cbus = &Wire;
 }
 
 RF430::RF430(int resetPin_, int irqPin_)
@@ -40,6 +41,7 @@ RF430::RF430(int resetPin_, int irqPin_)
     i2caddr = 0x28;  // Default with all I2C address pins pulled low
     is_rf_active = false;
     data_ptr = 0;
+    i2cbus = &Wire;
 }
 
 void RF430::begin()
@@ -113,27 +115,27 @@ void RF430::disable()
 
 void RF430::writeReg(uint16_t addr, uint16_t val)
 {
-    Wire.beginTransmission(i2caddr);
-    Wire.write(addr >> 8);
-    Wire.write(addr & 0xFF);
-    Wire.write(val & 0xFF);
-    Wire.write(val >> 8);
-    Wire.endTransmission();
+    i2cbus->beginTransmission(i2caddr);
+    i2cbus->write(addr >> 8);
+    i2cbus->write(addr & 0xFF);
+    i2cbus->write(val & 0xFF);
+    i2cbus->write(val >> 8);
+    i2cbus->endTransmission();
 }
 
 uint16_t RF430::readReg(uint16_t addr)
 {
     uint16_t ret;
 
-    Wire.beginTransmission(i2caddr);
-    Wire.write(addr >> 8);
-    Wire.write(addr & 0xFF);
-    Wire.endTransmission();
-    Wire.requestFrom(i2caddr, (uint8_t)2);
-    if (Wire.available())
-        ret = Wire.read();
-    if (Wire.available())
-        ret |= Wire.read() << 8;
+    i2cbus->beginTransmission(i2caddr);
+    i2cbus->write(addr >> 8);
+    i2cbus->write(addr & 0xFF);
+    i2cbus->endTransmission();
+    i2cbus->requestFrom(i2caddr, (uint8_t)2);
+    if (i2cbus->available())
+        ret = i2cbus->read();
+    if (i2cbus->available())
+        ret |= i2cbus->read() << 8;
     return ret;
 }
 
@@ -148,37 +150,37 @@ size_t RF430::write(const uint8_t *buf, size_t len)
     size_t written = 0;
     int i;
 
-    Wire.beginTransmission(i2caddr);
-    Wire.write(data_ptr >> 8);
-    Wire.write(data_ptr & 0xFF);
+    i2cbus->beginTransmission(i2caddr);
+    i2cbus->write(data_ptr >> 8);
+    i2cbus->write(data_ptr & 0xFF);
 
     while ( (len-written) > 8 ) {
         for (i=0; i < 8; i++) {
-            Wire.write(buf[written++]);
+            i2cbus->write(buf[written++]);
             data_ptr++;
         }
-        Wire.endTransmission();
-        Wire.beginTransmission(i2caddr);
-        Wire.write(data_ptr >> 8);
-        Wire.write(data_ptr & 0xFF);
+        i2cbus->endTransmission();
+        i2cbus->beginTransmission(i2caddr);
+        i2cbus->write(data_ptr >> 8);
+        i2cbus->write(data_ptr & 0xFF);
     }
 
     do {
-        Wire.write(buf[written++]);
+        i2cbus->write(buf[written++]);
         data_ptr++;
     } while (len - written);
-    Wire.endTransmission();
+    i2cbus->endTransmission();
 
     return written;
 }
 
 size_t RF430::write(uint8_t c)
 {
-    Wire.beginTransmission(i2caddr);
-    Wire.write(data_ptr >> 8);
-    Wire.write(data_ptr & 0xFF);
-    Wire.write(c);
-    Wire.endTransmission();
+    i2cbus->beginTransmission(i2caddr);
+    i2cbus->write(data_ptr >> 8);
+    i2cbus->write(data_ptr & 0xFF);
+    i2cbus->write(c);
+    i2cbus->endTransmission();
     data_ptr++;
 
     return 1;
@@ -188,22 +190,22 @@ size_t RF430::readBytes(char *buf, size_t len)
 {
     size_t haveread = 0;
 
-    Wire.beginTransmission(i2caddr);
-    Wire.write(data_ptr >> 8);
-    Wire.write(data_ptr & 0xFF);
-    Wire.endTransmission();
+    i2cbus->beginTransmission(i2caddr);
+    i2cbus->write(data_ptr >> 8);
+    i2cbus->write(data_ptr & 0xFF);
+    i2cbus->endTransmission();
 
     while ( (len - haveread) > 8 ) {
-        Wire.requestFrom(i2caddr, (uint8_t)8);
-        while (Wire.available()) {
-            buf[haveread++] = Wire.read();
+        i2cbus->requestFrom(i2caddr, (uint8_t)8);
+        while (i2cbus->available()) {
+            buf[haveread++] = i2cbus->read();
             data_ptr++;
         }
     }
 
-    Wire.requestFrom(i2caddr, (uint8_t) (len-haveread));
-    while (Wire.available()) {
-        buf[haveread++] = Wire.read();
+    i2cbus->requestFrom(i2caddr, (uint8_t) (len-haveread));
+    while (i2cbus->available()) {
+        buf[haveread++] = i2cbus->read();
         data_ptr++;
     }
 
@@ -217,14 +219,14 @@ int RF430::peek()
 {
     int c;
 
-    Wire.beginTransmission(i2caddr);
-    Wire.write(data_ptr >> 8);
-    Wire.write(data_ptr & 0xFF);
-    Wire.endTransmission();
+    i2cbus->beginTransmission(i2caddr);
+    i2cbus->write(data_ptr >> 8);
+    i2cbus->write(data_ptr & 0xFF);
+    i2cbus->endTransmission();
 
-    Wire.requestFrom(i2caddr, (uint8_t)1);
-    if (Wire.available())
-        c = Wire.read();
+    i2cbus->requestFrom(i2caddr, (uint8_t)1);
+    if (i2cbus->available())
+        c = i2cbus->read();
 
     return c;
 }

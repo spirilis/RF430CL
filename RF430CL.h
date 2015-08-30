@@ -105,10 +105,12 @@ class RF430 : public Stream {
         uint16_t data_ptr;
         uint8_t i2caddr;
         uint16_t last_known_irq, end_of_ndef;
+        TwoWire *i2cbus;
 
     public:
         RF430(int resetPin_, int irqPin_, uint8_t i2caddr_);
         RF430(int resetPin_, int irqPin_);
+        void setWire(TwoWire *wire_instance_ptr) { i2cbus = wire_instance_ptr; }  // Change instance of TwoWire used by the library
 
         void begin(void);
         void end(void);
